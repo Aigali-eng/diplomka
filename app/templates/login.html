@@ -1,0 +1,55 @@
+from flask import Flask, render_template, request, redirect, session, url_for
+import pyrebase
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+
+firebase_config = {
+    "apiKey": "YOUR_API_KEY",
+    "authDomain": "YOUR_PROJECT.firebaseapp.com",
+    "databaseURL": "",
+    "projectId": "YOUR_PROJECT",
+    "storageBucket": "YOUR_PROJECT.appspot.com",
+    "messagingSenderId": "YOUR_MESSAGING_ID",
+    "appId": "YOUR_APP_ID"
+}
+
+firebase = pyrebase.initialize_app(firebase_config)
+auth = firebase.auth()
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        try:
+            user = auth.sign_in_with_email_and_password(email, password)
+            session['user'] = user['idToken']
+            return redirect(url_for('dashboard'))
+        except:
+            return "Неверный email или пароль"
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        try:
+            auth.create_user_with_email_and_password(email, password)
+            return redirect(url_for('login'))
+        except:
+            return "Ошибка регистрации"
+    return render_template('register.html')
+
+@app.route('/dashboard')
+def dashboard():
+    if 'user' in session:
+        return "Добро пожаловать в панель управления!"
+    return redirect(url_for('login'))
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login'))
+
