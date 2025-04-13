@@ -1,12 +1,12 @@
-// Инициализация Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+// static/firebase.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCQnCbrt5tTPWUy-28JgpO_mdwLrBfe5zo",
   authDomain: "diplom-proj22.firebaseapp.com",
   projectId: "diplom-proj22",
-  storageBucket: "diplom-proj22.appspot.com",
+  storageBucket: "diplom-proj22.firebasestorage.app",
   messagingSenderId: "812764485262",
   appId: "1:812764485262:web:4c119f3b271a568eab9bdf",
   measurementId: "G-BKDMP13XQ5"
@@ -15,26 +15,67 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-window.register = async function () {
-  const email = document.getElementById("email").value;
+// Простая email проверка
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// LOGIN
+window.login = function () {
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    alert("Успешная регистрация!");
-    window.location.href = "/";
-  } catch (error) {
-    document.getElementById("error").innerText = error.message;
+  const error = document.getElementById("error");
+
+  if (!isValidEmail(email)) {
+    error.textContent = "Неверный формат email.";
+    return;
   }
+
+  if (password.length < 6) {
+    error.textContent = "Пароль должен быть не менее 6 символов.";
+    return;
+  }
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      window.location.href = "/";
+    })
+    .catch((err) => {
+      if (err.code === 'auth/user-not-found') {
+        error.textContent = "Аккаунт с таким email не найден.";
+      } else if (err.code === 'auth/wrong-password') {
+        error.textContent = "Неверный пароль.";
+      } else {
+        error.textContent = "Ошибка входа: " + err.message;
+      }
+    });
 };
 
-window.login = async function () {
-  const email = document.getElementById("email").value;
+// REGISTER
+window.register = function () {
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    alert("Вход выполнен!");
-    window.location.href = "/";
-  } catch (error) {
-    document.getElementById("error").innerText = error.message;
+  const error = document.getElementById("error");
+
+  if (!isValidEmail(email)) {
+    error.textContent = "Неверный формат email.";
+    return;
   }
+
+  if (password.length < 6) {
+    error.textContent = "Пароль должен быть не менее 6 символов.";
+    return;
+  }
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      window.location.href = "/";
+    })
+    .catch((err) => {
+      if (err.code === 'auth/email-already-in-use') {
+        error.textContent = "Аккаунт с таким email уже существует.";
+      } else {
+        error.textContent = "Ошибка регистрации: " + err.message;
+      }
+    });
 };

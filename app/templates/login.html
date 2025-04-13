@@ -1,15 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Login</title>
+  <meta charset="UTF-8" />
+  <title>Вход</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <h1>Вход</h1>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Пароль">
-  <button onclick="login()">Войти</button>
-
-  <p id="error"></p>
+  <div class="form-container">
+    <h1>Вход</h1>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Пароль" />
+    <button onclick="login()">Войти</button>
+    <p id="error"></p>
+    <p style="text-align:center; margin-top:15px;">
+      Нет аккаунта? <a href="/register">Зарегистрируйтесь</a>
+    </p>
+  </div>
 
   <script type="module" src="/static/firebase.js"></script>
 </body>

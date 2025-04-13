@@ -1,15 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Register</title>
+  <meta charset="UTF-8" />
+  <title>Регистрация</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <h1>Регистрация</h1>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Пароль">
-  <button onclick="register()">Зарегистрироваться</button>
-
-  <p id="error"></p>
+  <div class="form-container">
+    <h1>Регистрация</h1>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Пароль" />
+    <button onclick="register()">Зарегистрироваться</button>
+    <p id="error"></p>
+    <p style="text-align:center; margin-top:15px;">
+      Уже есть аккаунт? <a href="/login">Войти</a>
+    </p>
+  </div>
 
   <script type="module" src="/static/firebase.js"></script>
 </body>
