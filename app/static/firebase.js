@@ -79,3 +79,37 @@ window.register = function () {
       }
     });
 };
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+// Экспорт на случай, если понадобится в других файлах
+export { app, auth };
+
+// Проверка авторизации и смена навигации
+window.setupAuthState = function () {
+  const nav = document.getElementById("nav-links");
+  onAuthStateChanged(auth, (user) => {
+    if (user && nav) {
+      nav.innerHTML = `
+        <span class="text-gray-600">Вы вошли как: <strong>${user.email}</strong></span>
+        <button onclick="logout()" class="text-red-600 hover:underline ml-4">Выйти</button>
+      `;
+    }
+  });
+};
+
+// Выход из аккаунта
+window.logout = function () {
+  signOut(auth).then(() => {
+    window.location.reload();
+  });
+};
+
+// Обработчик кнопки "Начать"
+window.startApp = function () {
+  const user = auth.currentUser;
+  if (user) {
+    window.location.href = "/dashboard";
+  } else {
+    window.location.href = "/login";
+  }
+};

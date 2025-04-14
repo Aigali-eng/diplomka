@@ -1,11 +1,50 @@
 <!DOCTYPE html>
-<html>
-<head><title>TeamFlow - Главная</title></head>
-<body>
-  <h1>Добро пожаловать в TeamFlow</h1>
-  <p>Управляй своими проектами легко и удобно!</p>
-  <a href="/login">Войти</a> | <a href="/register">Зарегистрироваться</a>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>TeamTrack — Главная</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/static/favicon.ico">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans" onload="setupAuthState()">
+  
+  <!-- Навигация -->
+  <header class="bg-white shadow">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
+      <nav class="space-x-4 flex items-center" id="nav-links">
+        <a href="/login" class="text-gray-600 hover:text-indigo-600">Войти</a>
+        <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Регистрация</a>
+      </nav>
+    </div>
+  </header>
 
+  <!-- Главный блок -->
+  <main class="flex flex-col md:flex-row items-center justify-between container mx-auto px-6 py-20">
+    <div class="max-w-xl">
+      <h2 class="text-4xl font-bold mb-4">Управляй своими проектами <span class="text-indigo-600">легко</span></h2>
+      <p class="text-lg text-gray-700 mb-6">
+        Организуй задачи, отслеживай прогресс и работай в команде с помощью TeamTrack.
+      </p>
+      <button onclick="startApp()" class="bg-indigo-600 text-white px-6 py-3 rounded text-lg hover:bg-indigo-700 transition">
+        Начать
+      </button>
+    </div>
+    
+    <div class="mt-10 md:mt-0 md:ml-10 w-full max-w-md">
+      <img src="https://undraw.co/api/illustrations/5deacfe9-1661-487c-bc3e-404c2754f98c" alt="Teamwork Illustration">
+    </div>
+  </main>
+
+  <!-- Подвал -->
+  <footer class="bg-white shadow mt-20">
+    <div class="container mx-auto px-6 py-4 text-center text-sm text-gray-500">
+      © 2025 TeamTrack. Все права защищены.
+    </div>
+  </footer>
+
+  <!-- Firebase -->
   <script type="module" src="/static/firebase.js"></script>
+
 </body>
 </html>

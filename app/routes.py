@@ -13,3 +13,7 @@ def login():
 @main.route('/register')
 def register():
     return render_template('register.html')
+
+@main.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
