@@ -33,3 +33,5 @@ def analytics():
 @main.route('/team')
 def team():
     return render_template('team.html')
+
+

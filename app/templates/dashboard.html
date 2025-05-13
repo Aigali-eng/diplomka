@@ -150,6 +150,13 @@
       }
     };
 
+    window.copyInviteLink = function (projectId) {
+      const link = `${window.location.origin}/invite?id=${projectId}`;
+      navigator.clipboard.writeText(link)
+        .then(() => alert("Ссылка приглашения скопирована!"))
+        .catch(() => alert("Ошибка при копировании ссылки"));
+    };
+
     async function renderProjects(snapshot) {
       const container = document.getElementById("projectsList");
       container.innerHTML = "";
@@ -182,6 +189,7 @@
               <div class="space-x-2">
                 <button onclick='openEditModal("${docSnap.id}", ${JSON.stringify(data).replace(/'/g, "\\'")})' class="text-blue-600 hover:underline">✏️</button>
                 <button onclick="deleteProject('${docSnap.id}')" class="text-red-500 hover:underline">🗑</button>
+                <button onclick="copyInviteLink('${docSnap.id}')" class="text-indigo-500 hover:underline">📋 Пригласить</button>
               </div>
             </div>
           </div>
