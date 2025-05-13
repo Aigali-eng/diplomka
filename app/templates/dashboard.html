@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -12,36 +14,107 @@
   <header class="bg-white shadow">
     <div class="container mx-auto px-6 py-4 flex justify-between items-center">
       <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
-      <nav class="space-x-4">
-        <a href="/" class="text-gray-600 hover:text-indigo-600">Главная</a>
-        <a href="#" onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Выйти</a>
+      <nav class="space-x-4 flex items-center">
+        <a href="/" class="text-gray-600 hover:text-indigo-600">🏠 Главная</a>
+        <a href="/profile" class="text-gray-600 hover:text-indigo-600">👤 Профиль</a>
       </nav>
     </div>
   </header>
 
   <!-- Контент -->
   <main class="container mx-auto px-6 py-10">
-    <h2 class="text-3xl font-bold mb-6">Добро пожаловать в панель управления</h2>
-    <p class="text-gray-700 mb-4">Здесь будут отображаться ваши проекты и задачи. Пока что страница пустая — но мы скоро это исправим.</p>
-    
-    <!-- Пример заглушки -->
-    <div class="p-6 bg-white rounded-lg shadow text-center text-gray-500">
-      🔧 Панель управления находится в разработке...
+    <h2 class="text-3xl font-bold mb-6">Добро пожаловать, <span id="username">пользователь</span>!</h2>
+
+    <!-- Создание проекта -->
+    <div class="bg-white p-6 rounded-lg shadow mb-6">
+      <h3 class="text-xl font-semibold mb-4">Создать проект</h3>
+      <input type="text" id="projectName" placeholder="Название проекта" class="border p-2 w-full mb-2" />
+      <textarea id="projectDesc" placeholder="Описание проекта" class="border p-2 w-full mb-2"></textarea>
+      <input type="text" id="projectMembers" placeholder="Участники (через запятую)" class="border p-2 w-full mb-4" />
+      <button onclick="createProject()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Создать</button>
+    </div>
+
+    <!-- Список проектов -->
+    <h3 class="text-2xl font-bold mb-4">Мои проекты</h3>
+    <div id="projectsList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <!-- Карточки проектов появятся здесь -->
     </div>
   </main>
 
-  <!-- Скрипт для выхода -->
-  <script type="module" src="/static/firebase.js"></script>
-  <script type="module">
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { auth } from "/static/firebase.js";
+  <!-- Firebase и логика -->
+<script type="module">
+  import { auth, db, onAuthStateChanged } from "/static/firebase.js";
+  import {
+    collection, addDoc, query, where, onSnapshot, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    window.logout = function () {
-      signOut(auth).then(() => {
-        window.location.href = "/";
+
+    let currentUser = null;
+
+    // Создание проекта
+    window.createProject = async function () {
+      const name = document.getElementById("projectName").value.trim();
+      const desc = document.getElementById("projectDesc").value.trim();
+      const membersRaw = document.getElementById("projectMembers").value.trim();
+
+      if (!name || !currentUser) return;
+
+      const members = membersRaw
+        ? membersRaw.split(",").map(e => e.trim()).filter(e => e)
+        : [];
+
+      // Включаем самого создателя в список участников
+      if (!members.includes(currentUser.email)) {
+        members.push(currentUser.email);
+      }
+
+      await addDoc(collection(db, "projects"), {
+        name,
+        description: desc,
+        members,
+        owner: currentUser.uid,
+        createdAt: serverTimestamp()
       });
-    }
-  </script>
 
+      // Очистка формы
+      document.getElementById("projectName").value = "";
+      document.getElementById("projectDesc").value = "";
+      document.getElementById("projectMembers").value = "";
+    };
+
+    // Загрузка проектов
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById("username").textContent = user.email.split("@")[0];
+
+        // Запрос всех проектов, где пользователь является участником
+        const q = query(collection(db, "projects"), where("members", "array-contains", user.email));
+        onSnapshot(q, snapshot => {
+          const container = document.getElementById("projectsList");
+          container.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const memberList = data.members.join(", ");
+
+            container.innerHTML += `
+              <a href="/project.html?id=${doc.id}" class="block bg-white p-4 rounded shadow hover:shadow-md transition">
+                <h4 class="text-lg font-bold mb-1">${data.name}</h4>
+                <p class="text-gray-600 text-sm mb-1">${data.description || "Без описания"}</p>
+                <p class="text-sm text-gray-500">👥 Участники: ${memberList}</p>
+                <p class="text-xs text-gray-400 mt-2">→ Перейти к проекту</p>
+              </a>
+            `;
+          });
+
+          if (snapshot.empty) {
+            container.innerHTML = "<p class='text-gray-500'>Нет проектов, в которых вы участвуете.</p>";
+          }
+        });
+      } else {
+        window.location.href = "/login";
+      }
+    });
+  </script>
 </body>
 </html>

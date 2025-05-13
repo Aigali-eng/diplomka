@@ -17,3 +17,11 @@ def register():
 @main.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
+
+@main.route('/project.html')
+def project():
+    return render_template('project.html')
+
+@main.route('/profile')
+def profile():
+    return render_template('profile.html')

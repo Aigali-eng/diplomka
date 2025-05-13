@@ -1,15 +1,157 @@
 <!DOCTYPE html>
-<html>
-<head><title>Проект</title></head>
-<body>
-  <a href="/dashboard">← Назад</a>
-  <h2>Название проекта</h2>
-  <p>Описание, дедлайн, участники...</p>
-  <ul>
-    <li>[ ] Задача 1</li>
-    <li>[x] Задача 2</li>
-  </ul>
-  <input type="text" placeholder="Новая задача">
-  <button>Добавить</button>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>TeamTrack — Проект</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <!-- Навигация -->
+  <header class="bg-white shadow mb-6">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/dashboard" class="text-indigo-600 hover:underline">← Назад</a>
+      <h1 class="text-xl font-bold">TeamTrack</h1>
+    </div>
+  </header>
+
+  <!-- Контент -->
+  <main class="container mx-auto px-6">
+    
+    <!-- Информация о проекте -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-2xl font-bold mb-2" id="projectTitle">Загрузка...</h2>
+      <p class="text-gray-700 mb-2" id="projectDesc">Описание проекта</p>
+      <p class="text-sm text-gray-600 mb-1" id="projectMembers">Участники: ...</p>
+    </div>
+
+    <!-- Задачи -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h3 class="text-xl font-semibold mb-4">✅ Задачи</h3>
+      <ul id="taskList" class="space-y-4">
+        <li>Загрузка...</li>
+      </ul>
+    </div>
+
+    <!-- Добавление задачи -->
+    <div class="bg-white p-6 rounded shadow mb-10">
+      <h3 class="text-xl font-semibold mb-4">➕ Добавить задачу</h3>
+      <input type="text" id="taskText" placeholder="Название задачи" class="border p-2 w-full mb-2 rounded" />
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input type="email" id="taskAssignee" placeholder="Исполнитель (email)" class="border p-2 rounded" />
+        <select id="taskPriority" class="border p-2 rounded">
+          <option value="">Приоритет</option>
+          <option value="high">🔴 Высокий</option>
+          <option value="medium">🟡 Средний</option>
+          <option value="low">🟢 Низкий</option>
+        </select>
+        <input type="date" id="taskDue" class="border p-2 rounded" />
+      </div>
+      <button onclick="addTask()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Добавить</button>
+    </div>
+
+  </main>
+
+  <!-- Firebase + логика -->
+  <script type="module">
+    import { auth, db, onAuthStateChanged } from "/static/firebase.js";
+    import {
+      doc, getDoc, collection, query, where, addDoc, onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    let projectId = new URLSearchParams(window.location.search).get("id");
+    let currentUser = null;
+
+    const titleEl = document.getElementById("projectTitle");
+    const descEl = document.getElementById("projectDesc");
+    const membersEl = document.getElementById("projectMembers");
+    const taskList = document.getElementById("taskList");
+
+    async function loadProject() {
+      const projectRef = doc(db, "projects", projectId);
+      const projectSnap = await getDoc(projectRef);
+
+      if (projectSnap.exists()) {
+        const data = projectSnap.data();
+        titleEl.textContent = data.name;
+        descEl.textContent = data.description || "Без описания";
+        membersEl.textContent = "👥 Участники: " + (data.members || []).join(", ");
+      } else {
+        titleEl.textContent = "Проект не найден";
+      }
+    }
+
+    function renderTasks() {
+      const q = query(collection(db, "tasks"), where("projectId", "==", projectId));
+      onSnapshot(q, (snapshot) => {
+        taskList.innerHTML = "";
+        if (snapshot.empty) {
+          taskList.innerHTML = "<li class='text-gray-500'>Нет задач</li>";
+        }
+
+        snapshot.forEach(doc => {
+          const task = doc.data();
+          const status = task.status === "done" ? "line-through text-gray-400" : "";
+          const color = task.priority === "high" ? "text-red-600"
+                      : task.priority === "medium" ? "text-yellow-600"
+                      : "text-green-600";
+
+          taskList.innerHTML += `
+            <li class="p-4 border rounded ${task.status === "done" ? 'bg-gray-50' : ''}">
+              <p class="font-medium ${status}">${task.text}</p>
+              <p class="text-sm ${color}">${task.priority.toUpperCase()}</p>
+              <p class="text-sm text-gray-500">👤 ${task.assignee || "не назначено"} | ⏰ ${task.dueDate || "не указано"}</p>
+            </li>
+          `;
+        });
+      });
+    }
+
+    // 🟢 Сделали функцию глобальной — чтобы работала через onclick
+    window.addTask = async function () {
+      const text = document.getElementById("taskText").value.trim();
+      const assignee = document.getElementById("taskAssignee").value.trim();
+      const priority = document.getElementById("taskPriority").value;
+      const dueDate = document.getElementById("taskDue").value;
+
+      console.log("Добавление задачи:", { text, assignee, priority, dueDate, projectId });
+
+      if (!text || !priority || !projectId) {
+        console.warn("⛔ Не заполнены все обязательные поля или projectId пуст");
+        return;
+      }
+
+      try {
+        const docRef = await addDoc(collection(db, "tasks"), {
+          text,
+          assignee,
+          priority,
+          dueDate,
+          status: "active",
+          projectId,
+          createdAt: serverTimestamp()
+        });
+
+        console.log("✅ Задача добавлена:", docRef.id);
+      } catch (err) {
+        console.error("❌ Ошибка при добавлении задачи:", err);
+      }
+
+      document.getElementById("taskText").value = "";
+      document.getElementById("taskAssignee").value = "";
+      document.getElementById("taskPriority").value = "";
+      document.getElementById("taskDue").value = "";
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "/login";
+      } else {
+        currentUser = user;
+        loadProject();
+        renderTasks();
+      }
+    });
+  </script>
 </body>
 </html>

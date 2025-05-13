@@ -1,6 +1,14 @@
 // static/firebase.js
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCQnCbrt5tTPWUy-28JgpO_mdwLrBfe5zo",
@@ -12,10 +20,12 @@ const firebaseConfig = {
   measurementId: "G-BKDMP13XQ5"
 };
 
+// Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app); // Firestore для проектов
 
-// Простая email проверка
+// Email-проверка
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -37,7 +47,7 @@ window.login = function () {
   }
 
   signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
+    .then(() => {
       window.location.href = "/";
     })
     .catch((err) => {
@@ -68,7 +78,7 @@ window.register = function () {
   }
 
   createUserWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
+    .then(() => {
       window.location.href = "/";
     })
     .catch((err) => {
@@ -79,12 +89,8 @@ window.register = function () {
       }
     });
 };
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-// Экспорт на случай, если понадобится в других файлах
-export { app, auth };
-
-// Проверка авторизации и смена навигации
+// Обновление навигации при входе
 window.setupAuthState = function () {
   const nav = document.getElementById("nav-links");
   onAuthStateChanged(auth, (user) => {
@@ -97,14 +103,14 @@ window.setupAuthState = function () {
   });
 };
 
-// Выход из аккаунта
+// Выход
 window.logout = function () {
   signOut(auth).then(() => {
     window.location.reload();
   });
 };
 
-// Обработчик кнопки "Начать"
+// Кнопка "Начать"
 window.startApp = function () {
   const user = auth.currentUser;
   if (user) {
@@ -113,3 +119,6 @@ window.startApp = function () {
     window.location.href = "/login";
   }
 };
+
+// Экспорт для других модулей (dashboard и т.п.)
+export { app, auth, db, onAuthStateChanged };
