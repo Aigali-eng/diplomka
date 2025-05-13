@@ -34,4 +34,9 @@ def analytics():
 def team():
     return render_template('team.html')
 
+@main.route('/invite')
+def invite():
+    return render_template('invite.html')
+
+
 
