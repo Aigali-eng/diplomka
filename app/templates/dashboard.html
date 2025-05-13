@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -8,50 +6,75 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-50 text-gray-800 font-sans">
 
   <!-- Навигация -->
-  <header class="bg-white shadow">
+  <header class="bg-white shadow sticky top-0 z-10">
     <div class="container mx-auto px-6 py-4 flex justify-between items-center">
       <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
       <nav class="space-x-4 flex items-center">
+        <a href="/team" class="text-gray-600 hover:text-indigo-600">👥 Участники</a>
+        <a href="/analytics" class="text-gray-600 hover:text-indigo-600">📊 Аналитика</a>
         <a href="/" class="text-gray-600 hover:text-indigo-600">🏠 Главная</a>
         <a href="/profile" class="text-gray-600 hover:text-indigo-600">👤 Профиль</a>
       </nav>
     </div>
   </header>
 
-  <!-- Контент -->
-  <main class="container mx-auto px-6 py-10">
-    <h2 class="text-3xl font-bold mb-6">Добро пожаловать, <span id="username">пользователь</span>!</h2>
+  <main class="container mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Боковая панель -->
+    <aside class="lg:col-span-1">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-bold mb-4">Привет, <span id="username">...</span></h2>
+        <button onclick="toggleProjectForm()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">➕ Новый проект</button>
+      </div>
 
-    <!-- Создание проекта -->
-    <div class="bg-white p-6 rounded-lg shadow mb-6">
-      <h3 class="text-xl font-semibold mb-4">Создать проект</h3>
-      <input type="text" id="projectName" placeholder="Название проекта" class="border p-2 w-full mb-2" />
-      <textarea id="projectDesc" placeholder="Описание проекта" class="border p-2 w-full mb-2"></textarea>
-      <input type="text" id="projectMembers" placeholder="Участники (через запятую)" class="border p-2 w-full mb-4" />
-      <button onclick="createProject()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Создать</button>
-    </div>
+      <!-- Форма создания проекта -->
+      <div id="projectForm" class="bg-white mt-6 p-6 rounded-lg shadow hidden">
+        <h3 class="text-lg font-semibold mb-2">Создание проекта</h3>
+        <input id="projectName" type="text" placeholder="Название" class="border p-2 w-full mb-2 rounded">
+        <textarea id="projectDesc" placeholder="Описание" class="border p-2 w-full mb-2 rounded"></textarea>
+        <input id="projectMembers" type="text" placeholder="Участники (email, через запятую)" class="border p-2 w-full mb-4 rounded">
+        <button onclick="createProject()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 w-full">Создать</button>
+      </div>
+    </aside>
 
-    <!-- Список проектов -->
-    <h3 class="text-2xl font-bold mb-4">Мои проекты</h3>
-    <div id="projectsList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <!-- Карточки проектов появятся здесь -->
-    </div>
+    <!-- Основной контент -->
+    <section class="lg:col-span-3">
+      <h2 class="text-2xl font-bold mb-4">📁 Мои проекты</h2>
+      <div id="projectsList" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+    </section>
   </main>
 
-  <!-- Firebase и логика -->
-<script type="module">
-  import { auth, db, onAuthStateChanged } from "/static/firebase.js";
-  import {
-    collection, addDoc, query, where, onSnapshot, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  <!-- Модалка редактирования -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+      <h2 class="text-xl font-bold mb-4">✏️ Редактировать проект</h2>
+      <input type="text" id="editProjectName" class="border p-2 w-full mb-2" placeholder="Название проекта" />
+      <textarea id="editProjectDesc" class="border p-2 w-full mb-2" placeholder="Описание проекта"></textarea>
+      <input type="text" id="editProjectMembers" class="border p-2 w-full mb-4" placeholder="Участники (email, через запятую)" />
+      <div class="flex justify-between">
+        <button onclick="closeEditModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Отмена</button>
+        <button onclick="saveProjectEdit()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Firebase и логика -->
+  <script type="module">
+    import { auth, db, onAuthStateChanged } from "/static/firebase.js";
+    import {
+      collection, addDoc, query, where, onSnapshot, serverTimestamp,
+      updateDoc, doc, deleteDoc, getCountFromServer
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     let currentUser = null;
+    let editingProjectData = null;
 
-    // Создание проекта
+    window.toggleProjectForm = function () {
+      document.getElementById("projectForm").classList.toggle("hidden");
+    };
+
     window.createProject = async function () {
       const name = document.getElementById("projectName").value.trim();
       const desc = document.getElementById("projectDesc").value.trim();
@@ -63,7 +86,6 @@
         ? membersRaw.split(",").map(e => e.trim()).filter(e => e)
         : [];
 
-      // Включаем самого создателя в список участников
       if (!members.includes(currentUser.email)) {
         members.push(currentUser.email);
       }
@@ -76,41 +98,103 @@
         createdAt: serverTimestamp()
       });
 
-      // Очистка формы
       document.getElementById("projectName").value = "";
       document.getElementById("projectDesc").value = "";
       document.getElementById("projectMembers").value = "";
+      toggleProjectForm();
     };
 
-    // Загрузка проектов
+    window.openEditModal = function (id, data) {
+      editingProjectData = { id, ...data };
+      document.getElementById("editProjectName").value = data.name || "";
+      document.getElementById("editProjectDesc").value = data.description || "";
+      document.getElementById("editProjectMembers").value = (data.members || []).join(", ");
+      document.getElementById("editModal").classList.remove("hidden");
+    };
+
+    window.closeEditModal = function () {
+      editingProjectData = null;
+      document.getElementById("editModal").classList.add("hidden");
+    };
+
+    window.saveProjectEdit = async function () {
+      if (!editingProjectData) return;
+
+      const name = document.getElementById("editProjectName").value.trim();
+      const description = document.getElementById("editProjectDesc").value.trim();
+      const membersRaw = document.getElementById("editProjectMembers").value.trim();
+
+      const members = membersRaw.split(",").map(e => e.trim()).filter(e => e);
+      if (!members.includes(currentUser.email)) members.push(currentUser.email);
+
+      try {
+        await updateDoc(doc(db, "projects", editingProjectData.id), {
+          name,
+          description,
+          members
+        });
+        closeEditModal();
+      } catch (err) {
+        alert("Ошибка при сохранении: " + err.message);
+      }
+    };
+
+    window.deleteProject = async function (projectId) {
+      const confirmed = confirm("Удалить этот проект?");
+      if (!confirmed) return;
+
+      try {
+        await deleteDoc(doc(db, "projects", projectId));
+      } catch (err) {
+        alert("Не удалось удалить проект: " + err.message);
+      }
+    };
+
+    async function renderProjects(snapshot) {
+      const container = document.getElementById("projectsList");
+      container.innerHTML = "";
+
+      if (snapshot.empty) {
+        container.innerHTML = "<p class='text-gray-500'>Нет проектов 😥</p>";
+        return;
+      }
+
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        const createdAt = data.createdAt?.toDate().toLocaleDateString("ru-RU") || "неизвестно";
+        const memberList = (data.members || []).join(", ");
+
+        const taskQuery = query(collection(db, "tasks"), where("projectId", "==", docSnap.id));
+        const taskCountSnap = await getCountFromServer(taskQuery);
+        const taskCount = taskCountSnap.data().count || 0;
+
+        container.innerHTML += `
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition flex flex-col justify-between">
+            <div>
+              <h4 class="text-lg font-bold mb-1">${data.name}</h4>
+              <p class="text-gray-600 text-sm mb-2">${data.description || "Без описания"}</p>
+              <p class="text-xs text-gray-500 mb-1">👥 ${memberList}</p>
+              <p class="text-xs text-gray-400 mb-1">📅 ${createdAt}</p>
+              <p class="text-xs text-gray-500 mb-1">📌 Задач: ${taskCount}</p>
+            </div>
+            <div class="mt-4 flex justify-between text-sm">
+              <a href="/project.html?id=${docSnap.id}" class="text-indigo-600 hover:underline">➡️ Перейти</a>
+              <div class="space-x-2">
+                <button onclick='openEditModal("${docSnap.id}", ${JSON.stringify(data).replace(/'/g, "\\'")})' class="text-blue-600 hover:underline">✏️</button>
+                <button onclick="deleteProject('${docSnap.id}')" class="text-red-500 hover:underline">🗑</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
     onAuthStateChanged(auth, user => {
       if (user) {
         currentUser = user;
         document.getElementById("username").textContent = user.email.split("@")[0];
-
-        // Запрос всех проектов, где пользователь является участником
         const q = query(collection(db, "projects"), where("members", "array-contains", user.email));
-        onSnapshot(q, snapshot => {
-          const container = document.getElementById("projectsList");
-          container.innerHTML = "";
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const memberList = data.members.join(", ");
-
-            container.innerHTML += `
-              <a href="/project.html?id=${doc.id}" class="block bg-white p-4 rounded shadow hover:shadow-md transition">
-                <h4 class="text-lg font-bold mb-1">${data.name}</h4>
-                <p class="text-gray-600 text-sm mb-1">${data.description || "Без описания"}</p>
-                <p class="text-sm text-gray-500">👥 Участники: ${memberList}</p>
-                <p class="text-xs text-gray-400 mt-2">→ Перейти к проекту</p>
-              </a>
-            `;
-          });
-
-          if (snapshot.empty) {
-            container.innerHTML = "<p class='text-gray-500'>Нет проектов, в которых вы участвуете.</p>";
-          }
-        });
+        onSnapshot(q, renderProjects);
       } else {
         window.location.href = "/login";
       }

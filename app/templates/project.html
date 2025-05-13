@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>TeamTrack — Проект</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <a href="/analytics" class="text-gray-600 hover:text-indigo-600">📊 Аналитика</a>
+
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
@@ -15,7 +18,6 @@
     </div>
   </header>
 
-  <!-- Контент -->
   <main class="container mx-auto px-6">
     
     <!-- Информация о проекте -->
@@ -25,12 +27,20 @@
       <p class="text-sm text-gray-600 mb-1" id="projectMembers">Участники: ...</p>
     </div>
 
-    <!-- Задачи -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h3 class="text-xl font-semibold mb-4">✅ Задачи</h3>
-      <ul id="taskList" class="space-y-4">
-        <li>Загрузка...</li>
-      </ul>
+    <!-- Канбан -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10" id="kanbanBoard">
+      <div>
+        <h4 class="text-lg font-bold mb-2">📝 Todo</h4>
+        <div id="todo" class="space-y-4 bg-white p-4 rounded shadow min-h-[200px]"></div>
+      </div>
+      <div>
+        <h4 class="text-lg font-bold mb-2">🚧 In Progress</h4>
+        <div id="in-progress" class="space-y-4 bg-white p-4 rounded shadow min-h-[200px]"></div>
+      </div>
+      <div>
+        <h4 class="text-lg font-bold mb-2">✅ Done</h4>
+        <div id="done" class="space-y-4 bg-white p-4 rounded shadow min-h-[200px]"></div>
+      </div>
     </div>
 
     <!-- Добавление задачи -->
@@ -49,109 +59,296 @@
       </div>
       <button onclick="addTask()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Добавить</button>
     </div>
-
   </main>
 
-  <!-- Firebase + логика -->
-  <script type="module">
-    import { auth, db, onAuthStateChanged } from "/static/firebase.js";
-    import {
-      doc, getDoc, collection, query, where, addDoc, onSnapshot, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  <!-- Модальное окно редактирования -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Редактировать задачу</h2>
+      <input type="text" id="editText" class="border p-2 w-full mb-2 rounded" />
+      <input type="email" id="editAssignee" class="border p-2 w-full mb-2 rounded" />
+      <select id="editPriority" class="border p-2 w-full mb-2 rounded">
+        <option value="">Приоритет</option>
+        <option value="high">🔴 Высокий</option>
+        <option value="medium">🟡 Средний</option>
+        <option value="low">🟢 Низкий</option>
+      </select>
+      <input type="date" id="editDue" class="border p-2 w-full mb-4 rounded" />
+      <div class="flex justify-between">
+        <button onclick="closeEditModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Отмена</button>
+        <button onclick="saveTaskEdit()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
+      </div>
+    </div>
+  </div>
 
-    let projectId = new URLSearchParams(window.location.search).get("id");
-    let currentUser = null;
+  <!-- Прогресс проекта -->
+<div id="progressBlock" class="bg-white p-6 rounded shadow mb-6">
+  <h3 class="text-lg font-semibold mb-2">📊 Прогресс проекта</h3>
+  <p id="progressText" class="text-sm text-gray-700 mb-2">Загрузка...</p>
+  <div class="w-full bg-gray-200 rounded-full h-4">
+    <div id="progressBar" class="bg-indigo-600 h-4 rounded-full" style="width: 0%"></div>
+  </div>
+</div>
 
-    const titleEl = document.getElementById("projectTitle");
-    const descEl = document.getElementById("projectDesc");
-    const membersEl = document.getElementById("projectMembers");
-    const taskList = document.getElementById("taskList");
 
-    async function loadProject() {
-      const projectRef = doc(db, "projects", projectId);
-      const projectSnap = await getDoc(projectRef);
+<!-- Модальное окно комментариев -->
+<div id="commentModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+    <h2 class="text-xl font-bold mb-4">💬 Комментарии</h2>
+    <div id="commentList" class="space-y-3 max-h-64 overflow-y-auto mb-4 text-sm text-gray-700"></div>
+    <textarea id="newComment" placeholder="Напишите комментарий..." class="border p-2 w-full rounded mb-2"></textarea>
+    <div class="flex justify-between">
+      <button onclick="closeCommentModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Закрыть</button>
+      <button onclick="addComment()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Отправить</button>
+    </div>
+  </div>
+</div>
 
-      if (projectSnap.exists()) {
-        const data = projectSnap.data();
-        titleEl.textContent = data.name;
-        descEl.textContent = data.description || "Без описания";
-        membersEl.textContent = "👥 Участники: " + (data.members || []).join(", ");
-      } else {
-        titleEl.textContent = "Проект не найден";
-      }
+
+  <!-- Firebase логика -->
+ <script type="module">
+  import { auth, db, onAuthStateChanged } from "/static/firebase.js";
+  import {
+    doc, getDoc, collection, query, where, addDoc,
+    onSnapshot, serverTimestamp, updateDoc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+  let projectId = new URLSearchParams(window.location.search).get("id");
+  let currentUser = null;
+  let allTasks = [];
+  let editTaskId = null;
+  let currentTaskId = null;
+
+  const titleEl = document.getElementById("projectTitle");
+  const descEl = document.getElementById("projectDesc");
+  const membersEl = document.getElementById("projectMembers");
+
+  async function loadProject() {
+    const projectRef = doc(db, "projects", projectId);
+    const projectSnap = await getDoc(projectRef);
+    if (projectSnap.exists()) {
+      const data = projectSnap.data();
+      titleEl.textContent = data.name;
+      descEl.textContent = data.description || "Без описания";
+      membersEl.textContent = "👥 Участники: " + (data.members || []).join(", ");
+    } else {
+      titleEl.textContent = "Проект не найден";
     }
+  }
 
-    function renderTasks() {
+  function renderProgress() {
+    const total = allTasks.length;
+    const done = allTasks.filter(task => task.status === "done").length;
+    const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+    document.getElementById("progressText").textContent = `✅ Выполнено ${done} из ${total} задач (${percent}%)`;
+    document.getElementById("progressBar").style.width = percent + "%";
+  }
+
+  function renderKanban() {
+    ["todo", "in-progress", "done"].forEach(id => {
+      document.getElementById(id).innerHTML = "";
+    });
+
+    allTasks.forEach(task => {
+      const col = task.status || "todo";
+      const card = document.createElement("div");
+      card.className = `p-3 border rounded bg-white shadow-sm cursor-move`;
+      card.setAttribute("data-id", task.id);
+
+      const status = task.status === "done" ? "line-through text-gray-400" : "";
+      const color = task.priority === "high" ? "text-red-600"
+                  : task.priority === "medium" ? "text-yellow-600"
+                  : "text-green-600";
+
+      let dueLabel = "не указано";
+      let dueClass = "text-gray-500";
+
+      if (task.dueDate) {
+        const now = new Date();
+        const due = new Date(task.dueDate);
+        const diff = (due - now) / (1000 * 60 * 60 * 24);
+        dueLabel = due.toLocaleDateString("ru-RU");
+
+        if (diff < 0) dueClass = "text-red-600 font-semibold";
+        else if (diff <= 2) dueClass = "text-yellow-600 font-semibold";
+      }
+
+      card.innerHTML = `
+        <p class="font-medium ${status}">${task.text}</p>
+        <p class="text-sm ${color}">${task.priority.toUpperCase()}</p>
+        <p class="text-sm text-gray-500">👤 ${task.assignee || "не назначено"}</p>
+        <p class="text-sm ${dueClass}">⏰ ${dueLabel}</p>
+        <div class="mt-2 flex gap-4 text-sm">
+          <button class="edit-btn text-blue-600 hover:underline">✏️ Редактировать</button>
+          <button class="comment-btn text-indigo-500 hover:underline">💬 Комментарии</button>
+          <button class="delete-btn text-red-600 hover:underline">🗑 Удалить</button>
+        </div>
+      `;
+
+      card.querySelector(".edit-btn").addEventListener("click", () => openEditModal(task));
+      card.querySelector(".comment-btn").addEventListener("click", () => openCommentModal(task.id));
+      card.querySelector(".delete-btn").addEventListener("click", () => deleteTask(task.id));
+
+      document.getElementById(col).appendChild(card);
+    });
+
+    renderProgress();
+  }
+
+  async function deleteTask(taskId) {
+    const confirmDelete = confirm("Удалить задачу? Это действие нельзя отменить.");
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "tasks", taskId));
+    } catch (err) {
+      console.error("❌ Ошибка при удалении задачи:", err);
+    }
+  }
+
+  window.addTask = async function () {
+    const text = document.getElementById("taskText").value.trim();
+    const assignee = document.getElementById("taskAssignee").value.trim();
+    const priority = document.getElementById("taskPriority").value;
+    const dueDate = document.getElementById("taskDue").value;
+
+    if (!text || !priority || !projectId) return;
+
+    await addDoc(collection(db, "tasks"), {
+      text,
+      assignee,
+      priority,
+      dueDate,
+      status: "todo",
+      projectId,
+      createdAt: serverTimestamp()
+    });
+
+    document.getElementById("taskText").value = "";
+    document.getElementById("taskAssignee").value = "";
+    document.getElementById("taskPriority").value = "";
+    document.getElementById("taskDue").value = "";
+  };
+
+  function openEditModal(task) {
+    editTaskId = task.id;
+    document.getElementById("editText").value = task.text || "";
+    document.getElementById("editAssignee").value = task.assignee || "";
+    document.getElementById("editPriority").value = task.priority || "";
+    document.getElementById("editDue").value = task.dueDate || "";
+    document.getElementById("editModal").classList.remove("hidden");
+  }
+
+  function closeEditModal() {
+    editTaskId = null;
+    document.getElementById("editModal").classList.add("hidden");
+  }
+
+  async function saveTaskEdit() {
+    if (!editTaskId) return;
+
+    const updated = {
+      text: document.getElementById("editText").value.trim(),
+      assignee: document.getElementById("editAssignee").value.trim(),
+      priority: document.getElementById("editPriority").value,
+      dueDate: document.getElementById("editDue").value
+    };
+
+    await updateDoc(doc(db, "tasks", editTaskId), updated);
+    closeEditModal();
+  }
+
+  // 🔵 Комментарии
+  function openCommentModal(taskId) {
+    currentTaskId = taskId;
+    document.getElementById("commentModal").classList.remove("hidden");
+    loadComments(taskId);
+  }
+
+  function closeCommentModal() {
+    currentTaskId = null;
+    document.getElementById("commentModal").classList.add("hidden");
+    document.getElementById("commentList").innerHTML = "";
+    document.getElementById("newComment").value = "";
+  }
+
+  function loadComments(taskId) {
+    const commentRef = collection(db, "tasks", taskId, "comments");
+    const commentList = document.getElementById("commentList");
+
+    onSnapshot(commentRef, (snapshot) => {
+      commentList.innerHTML = "";
+      if (snapshot.empty) {
+        commentList.innerHTML = "<p class='text-gray-400'>Комментариев пока нет.</p>";
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement("div");
+        item.classList.add("p-2", "bg-gray-100", "rounded");
+        item.innerHTML = `<strong>${data.author}</strong><br>${data.text}`;
+        commentList.appendChild(item);
+      });
+    });
+  }
+
+  async function addComment() {
+    const text = document.getElementById("newComment").value.trim();
+    if (!text || !currentTaskId || !currentUser) return;
+
+    const commentRef = collection(db, "tasks", currentTaskId, "comments");
+
+    await addDoc(commentRef, {
+      text,
+      author: currentUser.email,
+      createdAt: serverTimestamp()
+    });
+
+    document.getElementById("newComment").value = "";
+  }
+
+  // 🔄 Подписка на задачи
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "/login";
+    } else {
+      currentUser = user;
+      loadProject();
+
       const q = query(collection(db, "tasks"), where("projectId", "==", projectId));
       onSnapshot(q, (snapshot) => {
-        taskList.innerHTML = "";
-        if (snapshot.empty) {
-          taskList.innerHTML = "<li class='text-gray-500'>Нет задач</li>";
-        }
-
+        allTasks = [];
         snapshot.forEach(doc => {
-          const task = doc.data();
-          const status = task.status === "done" ? "line-through text-gray-400" : "";
-          const color = task.priority === "high" ? "text-red-600"
-                      : task.priority === "medium" ? "text-yellow-600"
-                      : "text-green-600";
-
-          taskList.innerHTML += `
-            <li class="p-4 border rounded ${task.status === "done" ? 'bg-gray-50' : ''}">
-              <p class="font-medium ${status}">${task.text}</p>
-              <p class="text-sm ${color}">${task.priority.toUpperCase()}</p>
-              <p class="text-sm text-gray-500">👤 ${task.assignee || "не назначено"} | ⏰ ${task.dueDate || "не указано"}</p>
-            </li>
-          `;
+          allTasks.push({ id: doc.id, ...doc.data() });
         });
+        renderKanban();
       });
     }
+  });
 
-    // 🟢 Сделали функцию глобальной — чтобы работала через onclick
-    window.addTask = async function () {
-      const text = document.getElementById("taskText").value.trim();
-      const assignee = document.getElementById("taskAssignee").value.trim();
-      const priority = document.getElementById("taskPriority").value;
-      const dueDate = document.getElementById("taskDue").value;
-
-      console.log("Добавление задачи:", { text, assignee, priority, dueDate, projectId });
-
-      if (!text || !priority || !projectId) {
-        console.warn("⛔ Не заполнены все обязательные поля или projectId пуст");
-        return;
-      }
-
-      try {
-        const docRef = await addDoc(collection(db, "tasks"), {
-          text,
-          assignee,
-          priority,
-          dueDate,
-          status: "active",
-          projectId,
-          createdAt: serverTimestamp()
-        });
-
-        console.log("✅ Задача добавлена:", docRef.id);
-      } catch (err) {
-        console.error("❌ Ошибка при добавлении задачи:", err);
-      }
-
-      document.getElementById("taskText").value = "";
-      document.getElementById("taskAssignee").value = "";
-      document.getElementById("taskPriority").value = "";
-      document.getElementById("taskDue").value = "";
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "/login";
-      } else {
-        currentUser = user;
-        loadProject();
-        renderTasks();
+  // 📦 Drag-and-drop
+  ["todo", "in-progress", "done"].forEach(status => {
+    Sortable.create(document.getElementById(status), {
+      group: "tasks",
+      animation: 150,
+      onAdd: async (evt) => {
+        const taskId = evt.item.getAttribute("data-id");
+        if (taskId) await updateDoc(doc(db, "tasks", taskId), { status });
       }
     });
-  </script>
+  });
+
+  // 🌐 Глобальные функции
+  window.openEditModal = openEditModal;
+  window.closeEditModal = closeEditModal;
+  window.saveTaskEdit = saveTaskEdit;
+  window.deleteTask = deleteTask;
+  window.openCommentModal = openCommentModal;
+  window.closeCommentModal = closeCommentModal;
+  window.addComment = addComment;
+</script>
+
+
 </body>
 </html>

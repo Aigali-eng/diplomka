@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>TeamTrack — Аналитика</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="/static/favicon.ico">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <!-- Навигация -->
+  <header class="bg-white shadow">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
+      <nav class="space-x-4 flex items-center">
+        <a href="/dashboard" class="text-gray-600 hover:text-indigo-600">⬅ Панель</a>
+        <a href="/profile" class="text-gray-600 hover:text-indigo-600">👤 Профиль</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6 py-10">
+    <h2 class="text-3xl font-bold mb-6">📊 Аналитика задач</h2>
+
+    <div class="grid gap-8 md:grid-cols-2">
+      <!-- Статус задач -->
+      <div class="bg-white p-6 rounded shadow">
+        <h3 class="text-xl font-semibold mb-4">Статусы задач</h3>
+        <canvas id="statusChart" height="200"></canvas>
+      </div>
+
+      <!-- Приоритет задач -->
+      <div class="bg-white p-6 rounded shadow">
+        <h3 class="text-xl font-semibold mb-4">Приоритеты задач</h3>
+        <canvas id="priorityChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Прогресс -->
+    <div class="bg-white p-6 rounded shadow mt-10">
+      <h3 class="text-xl font-semibold mb-4">Общий прогресс</h3>
+      <div class="w-full bg-gray-200 rounded-full h-4">
+        <div id="progressBar" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="progressText" class="mt-2 text-sm text-gray-600">Загрузка...</p>
+    </div>
+  </main>
+
+  <!-- Firebase + Chart logic -->
+  <script type="module">
+    import { auth, db, onAuthStateChanged } from "/static/firebase.js";
+    import { collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const statusChartCtx = document.getElementById("statusChart").getContext("2d");
+    const priorityChartCtx = document.getElementById("priorityChart").getContext("2d");
+    let statusChart, priorityChart;
+
+    let currentUser = null;
+    let allTasks = [];
+
+    async function loadAnalytics(user) {
+      const userEmail = user.email;
+      const projectsRef = query(collection(db, "projects"), where("members", "array-contains", userEmail));
+      const projectSnapshots = await getDocs(projectsRef);
+
+      const projectIds = projectSnapshots.docs.map(doc => doc.id);
+
+      if (projectIds.length === 0) {
+        document.getElementById("progressText").textContent = "Нет проектов с участием пользователя.";
+        return;
+      }
+
+      const tasksRef = query(collection(db, "tasks"));
+      onSnapshot(tasksRef, (snapshot) => {
+        allTasks = snapshot.docs
+          .map(doc => doc.data())
+          .filter(task => projectIds.includes(task.projectId));
+
+        updateCharts();
+      });
+    }
+
+    function updateCharts() {
+      const statusCounts = { todo: 0, 'in-progress': 0, done: 0 };
+      const priorityCounts = { low: 0, medium: 0, high: 0 };
+
+      allTasks.forEach(task => {
+        statusCounts[task.status] = (statusCounts[task.status] || 0) + 1;
+        priorityCounts[task.priority] = (priorityCounts[task.priority] || 0) + 1;
+      });
+
+      const total = allTasks.length;
+      const done = statusCounts.done || 0;
+      const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+      document.getElementById("progressBar").style.width = percent + "%";
+      document.getElementById("progressText").textContent = total === 0 ? "Нет задач для анализа." : `Выполнено ${done} из ${total} задач (${percent}%)`;
+
+      if (statusChart) statusChart.destroy();
+      if (priorityChart) priorityChart.destroy();
+
+      statusChart = new Chart(statusChartCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["To Do", "In Progress", "Done"],
+          datasets: [{
+            data: [statusCounts.todo, statusCounts["in-progress"], statusCounts.done],
+            backgroundColor: ["#f87171", "#facc15", "#4ade80"]
+          }]
+        }
+      });
+
+      priorityChart = new Chart(priorityChartCtx, {
+        type: "bar",
+        data: {
+          labels: ["Low", "Medium", "High"],
+          datasets: [{
+            label: "Количество",
+            data: [priorityCounts.low, priorityCounts.medium, priorityCounts.high],
+            backgroundColor: ["#4ade80", "#facc15", "#f87171"]
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "/login";
+      } else {
+        currentUser = user;
+        loadAnalytics(user);
+      }
+    });
+  </script>
+</body>
+</html>

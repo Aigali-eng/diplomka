@@ -25,3 +25,11 @@ def project():
 @main.route('/profile')
 def profile():
     return render_template('profile.html')
+
+@main.route('/analytics')
+def analytics():
+    return render_template('analytics.html')
+
+@main.route('/team')
+def team():
+    return render_template('team.html')

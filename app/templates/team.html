@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Участники</title>
+  <script type="module" src="/static/firebase.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <h1 class="text-2xl font-bold mb-4">👥 Участники</h1>
+  <input type="text" id="searchInput" placeholder="Поиск по email" class="mb-4 p-2 border border-gray-300 rounded w-full" />
+  <div id="teamList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+  <script type="module">
+    import { db } from "/static/firebase.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+    const teamList = document.getElementById("teamList");
+    const searchInput = document.getElementById("searchInput");
+
+    async function loadTeam() {
+      const projectsSnapshot = await getDocs(collection(db, "projects"));
+      const userMap = {};
+
+      projectsSnapshot.forEach((doc) => {
+        const project = doc.data();
+        const projectName = project.name || "Без названия";
+        const members = project.members || [];
+
+        members.forEach((email) => {
+          if (!userMap[email]) {
+            userMap[email] = [];
+          }
+          userMap[email].push(projectName);
+        });
+      });
+
+      displayTeam(userMap);
+    }
+
+    function displayTeam(userMap) {
+      teamList.innerHTML = "";
+      const searchTerm = searchInput.value.toLowerCase();
+
+      Object.entries(userMap).forEach(([email, projects]) => {
+        if (email.toLowerCase().includes(searchTerm)) {
+          const card = document.createElement("div");
+          card.className = "bg-white p-4 rounded shadow";
+
+          const emailElem = document.createElement("h2");
+          emailElem.className = "font-semibold text-lg";
+          emailElem.textContent = email;
+
+          const projectsList = document.createElement("ul");
+          projects.forEach((project) => {
+            const li = document.createElement("li");
+            li.textContent = project;
+            projectsList.appendChild(li);
+          });
+
+          card.appendChild(emailElem);
+          card.appendChild(projectsList);
+          teamList.appendChild(card);
+        }
+      });
+    }
+
+    searchInput.addEventListener("input", () => {
+      loadTeam();
+    });
+
+    loadTeam();
+  </script>
+</body>
+</html>
