@@ -4,35 +4,55 @@
   <meta charset="UTF-8" />
   <title>Профиль — TeamTrack</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
 
   <!-- Навигация -->
-  <header class="bg-white shadow mb-6">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <a href="/dashboard" class="text-indigo-600 hover:underline">← Назад</a>
-      <h1 class="text-xl font-bold">TeamTrack</h1>
+  <header class="bg-white shadow sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/dashboard" class="text-indigo-600 hover:text-indigo-800 text-sm">← Назад к панели</a>
+      <h1 class="text-xl font-semibold text-indigo-700">TeamTrack</h1>
     </div>
   </header>
 
-  <!-- Контент -->
-  <main class="container mx-auto px-6">
+  <!-- Основной контент -->
+  <main class="max-w-4xl mx-auto px-6 py-10 space-y-8">
 
-    <!-- Блок профиля -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h2 class="text-2xl font-bold mb-2">👤 Мой профиль</h2>
-      <p class="text-gray-700 mb-2">📧 Email: <span id="userEmail">Загрузка...</span></p>
-      <p class="text-gray-600 text-sm">📅 Дата входа: <span id="loginDate">–</span></p>
-      <button onclick="logout()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">🔘 Выйти из аккаунта</button>
-    </div>
+    <!-- Карточка профиля -->
+    <section class="bg-white rounded-xl shadow-md p-6 flex flex-col md:flex-row items-center gap-6">
+      <div class="bg-indigo-500 text-white rounded-full w-20 h-20 flex items-center justify-center text-2xl font-bold uppercase shadow-inner">
+        <span id="avatarLetters">?</span>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold mb-1">👤 Мой профиль</h2>
+        <p class="text-gray-700 mb-1">📧 <strong>Email:</strong> <span id="userEmail">Загрузка...</span></p>
+        <p class="text-gray-600 text-sm">📅 Последний вход: <span id="loginDate">–</span></p>
+      </div>
+    </section>
 
-    <!-- Проекты -->
-    <div class="bg-white p-6 rounded shadow">
+    <!-- Статистика -->
+    <section class="grid sm:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-xl shadow text-center">
+        <h3 class="text-xl font-semibold text-indigo-600 mb-2">📁 Проекты</h3>
+        <p id="projectCount" class="text-3xl font-bold text-gray-700">–</p>
+      </div>
+
+      <div class="bg-gray-800 text-white p-6 rounded-xl shadow flex flex-col items-center justify-center">
+        <h3 class="text-xl font-semibold mb-2">🚪 Выйти</h3>
+        <button onclick="logout()" class="mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
+          🔘 Выйти из аккаунта
+        </button>
+      </div>
+    </section>
+
+    <!-- Список проектов -->
+    <section class="bg-white rounded-xl shadow p-6">
       <h3 class="text-xl font-semibold mb-4">📋 Мои проекты</h3>
-      <ul id="projectList" class="space-y-2 text-indigo-600">
+      <ul id="projectList" class="space-y-2 text-indigo-600 text-sm list-disc list-inside">
         <li>Загрузка...</li>
       </ul>
-    </div>
+    </section>
 
   </main>
 
@@ -45,6 +65,8 @@
     const emailEl = document.getElementById("userEmail");
     const loginDateEl = document.getElementById("loginDate");
     const projectList = document.getElementById("projectList");
+    const projectCountEl = document.getElementById("projectCount");
+    const avatarLetters = document.getElementById("avatarLetters");
 
     function logout() {
       signOut(auth).then(() => {
@@ -52,21 +74,29 @@
       });
     }
 
+    function getInitials(email) {
+      if (!email) return "?";
+      return email[0].toUpperCase();
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         emailEl.textContent = user.email;
-        loginDateEl.textContent = new Date(user.metadata.lastSignInTime).toLocaleString();
+        avatarLetters.textContent = getInitials(user.email);
+        loginDateEl.textContent = new Date(user.metadata.lastSignInTime).toLocaleString("ru-RU");
 
-        // Загрузка проектов пользователя
         const q = query(collection(db, "projects"), where("owner", "==", user.uid));
         const querySnapshot = await getDocs(q);
 
+        const projects = querySnapshot.docs;
+        projectCountEl.textContent = projects.length;
+
         projectList.innerHTML = "";
-        if (querySnapshot.empty) {
+        if (projects.length === 0) {
           projectList.innerHTML = "<li class='text-gray-500'>У вас пока нет проектов</li>";
         }
 
-        querySnapshot.forEach(doc => {
+        projects.forEach(doc => {
           const data = doc.data();
           const li = document.createElement("li");
           li.innerHTML = `<a href="/project.html?id=${doc.id}" class="hover:underline">${data.name}</a>`;

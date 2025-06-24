@@ -2,81 +2,87 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>TeamTrack — Аналитика</title>
+  <title>TeamTrack — Аналитика проекта</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="icon" href="/static/favicon.ico">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-  <!-- Навигация -->
-  <header class="bg-white shadow">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
-      <nav class="space-x-4 flex items-center">
-        <a href="/dashboard" class="text-gray-600 hover:text-indigo-600">⬅ Панель</a>
-        <a href="/profile" class="text-gray-600 hover:text-indigo-600">👤 Профиль</a>
+  <!-- Шапка -->
+  <header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-semibold text-indigo-600 tracking-tight">TeamTrack</h1>
+      <nav class="flex items-center gap-4">
+        <a id="backToProject" href="#" class="text-sm text-indigo-600 hover:underline">⬅ Назад к проекту</a>
+        <a href="/profile" class="text-gray-600 hover:text-indigo-600 text-sm font-medium">👤 Профиль</a>
       </nav>
     </div>
   </header>
 
-  <main class="container mx-auto px-6 py-10">
-    <h2 class="text-3xl font-bold mb-6">📊 Аналитика задач</h2>
+  <!-- Контент -->
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    <h2 class="text-2xl md:text-3xl font-bold mb-8 text-gray-800">📊 Аналитика проекта</h2>
 
     <div class="grid gap-8 md:grid-cols-2">
-      <!-- Статус задач -->
-      <div class="bg-white p-6 rounded shadow">
-        <h3 class="text-xl font-semibold mb-4">Статусы задач</h3>
+      <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow transition">
+        <h3 class="text-lg font-semibold mb-4 text-gray-700">Статусы задач</h3>
         <canvas id="statusChart" height="200"></canvas>
       </div>
-
-      <!-- Приоритет задач -->
-      <div class="bg-white p-6 rounded shadow">
-        <h3 class="text-xl font-semibold mb-4">Приоритеты задач</h3>
+      <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow transition">
+        <h3 class="text-lg font-semibold mb-4 text-gray-700">Приоритеты задач</h3>
         <canvas id="priorityChart" height="200"></canvas>
       </div>
     </div>
 
-    <!-- Прогресс -->
-    <div class="bg-white p-6 rounded shadow mt-10">
-      <h3 class="text-xl font-semibold mb-4">Общий прогресс</h3>
+    <div class="bg-white rounded-lg shadow-sm p-6 mt-10 hover:shadow transition">
+      <h3 class="text-lg font-semibold mb-4 text-gray-700">Общий прогресс</h3>
       <div class="w-full bg-gray-200 rounded-full h-4">
-        <div id="progressBar" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div>
+        <div id="progressBar" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
       </div>
-      <p id="progressText" class="mt-2 text-sm text-gray-600">Загрузка...</p>
+      <p id="progressText" class="mt-2 text-sm text-gray-500">Загрузка...</p>
     </div>
   </main>
 
-  <!-- Firebase + Chart logic -->
+  <!-- Скрипт -->
   <script type="module">
     import { auth, db, onAuthStateChanged } from "/static/firebase.js";
-    import { collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import {
+      collection, query, where, getDocs, onSnapshot, getDoc, doc
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get("id");
+
+    // Назначаем ссылку на кнопку назад
+    const backBtn = document.getElementById("backToProject");
+    if (projectId) {
+      backBtn.href = `/project.html?id=${projectId}`;
+    }
 
     const statusChartCtx = document.getElementById("statusChart").getContext("2d");
     const priorityChartCtx = document.getElementById("priorityChart").getContext("2d");
     let statusChart, priorityChart;
-
-    let currentUser = null;
     let allTasks = [];
 
     async function loadAnalytics(user) {
-      const userEmail = user.email;
-      const projectsRef = query(collection(db, "projects"), where("members", "array-contains", userEmail));
-      const projectSnapshots = await getDocs(projectsRef);
+      const projectRef = doc(db, "projects", projectId);
+      const projectSnap = await getDoc(projectRef);
 
-      const projectIds = projectSnapshots.docs.map(doc => doc.id);
-
-      if (projectIds.length === 0) {
-        document.getElementById("progressText").textContent = "Нет проектов с участием пользователя.";
+      if (!projectSnap.exists()) {
+        document.getElementById("progressText").textContent = "Проект не найден.";
         return;
       }
 
-      const tasksRef = query(collection(db, "tasks"));
-      onSnapshot(tasksRef, (snapshot) => {
-        allTasks = snapshot.docs
-          .map(doc => doc.data())
-          .filter(task => projectIds.includes(task.projectId));
+      const projectData = projectSnap.data();
+      if (!projectData.members.includes(user.email)) {
+        document.getElementById("progressText").textContent = "У вас нет доступа к этому проекту.";
+        return;
+      }
 
+      const tasksRef = query(collection(db, "tasks"), where("projectId", "==", projectId));
+      onSnapshot(tasksRef, (snapshot) => {
+        allTasks = snapshot.docs.map(doc => doc.data());
         updateCharts();
       });
     }
@@ -94,7 +100,9 @@
       const done = statusCounts.done || 0;
       const percent = total === 0 ? 0 : Math.round((done / total) * 100);
       document.getElementById("progressBar").style.width = percent + "%";
-      document.getElementById("progressText").textContent = total === 0 ? "Нет задач для анализа." : `Выполнено ${done} из ${total} задач (${percent}%)`;
+      document.getElementById("progressText").textContent = total === 0
+        ? "Нет задач для анализа."
+        : `Выполнено ${done} из ${total} задач (${percent}%)`;
 
       if (statusChart) statusChart.destroy();
       if (priorityChart) priorityChart.destroy();
@@ -122,9 +130,7 @@
         },
         options: {
           scales: {
-            y: {
-              beginAtZero: true
-            }
+            y: { beginAtZero: true }
           }
         }
       });
@@ -134,7 +140,6 @@
       if (!user) {
         window.location.href = "/login";
       } else {
-        currentUser = user;
         loadAnalytics(user);
       }
     });

@@ -5,104 +5,194 @@
   <title>TeamTrack — Проект</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <a href="/analytics" class="text-gray-600 hover:text-indigo-600">📊 Аналитика</a>
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Inter', 'ui-sans-serif', 'system-ui']
+          },
+          colors: {
+            'brand': {
+              '50': '#f5f3ff',
+              '100': '#ede9fe',
+              '500': '#6366f1',
+              '600': '#4f46e5',
+              '700': '#4338ca'
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar with Gradient and Enhanced Shadow -->
+    <aside class="w-72 bg-gradient-to-br from-brand-600 to-purple-700 text-white shadow-2xl transform transition-transform duration-300 ease-in-out">
+      <div class="p-6 space-y-6">
+        <div class="flex items-center space-x-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white/80" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+          </svg>
+          <h1 class="text-3xl font-bold tracking-tight">TeamTrack</h1>
+        </div>
 
-  <!-- Навигация -->
-  <header class="bg-white shadow mb-6">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <a href="/dashboard" class="text-indigo-600 hover:underline">← Назад</a>
-      <h1 class="text-xl font-bold">TeamTrack</h1>
-    </div>
-  </header>
-
-  <main class="container mx-auto px-6">
-    
-    <!-- Информация о проекте -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h2 class="text-2xl font-bold mb-2" id="projectTitle">Загрузка...</h2>
-      <p class="text-gray-700 mb-2" id="projectDesc">Описание проекта</p>
-      <p class="text-sm text-gray-600 mb-1" id="projectMembers">Участники: ...</p>
-    </div>
-
-    <!-- Канбан -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10" id="kanbanBoard">
-      <div>
-        <h4 class="text-lg font-bold mb-2">📝 Todo</h4>
-        <div id="todo" class="space-y-4 bg-white p-4 rounded shadow min-h-[200px]"></div>
+        <nav class="space-y-2 mt-6">
+          <a href="/dashboard" class="block py-3 px-4 rounded-lg hover:bg-white/10 transition-colors duration-200 flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span class="font-medium">Назад на панель</span>
+          </a>
+          
+          <a href="/analytics" class="block py-3 px-4 rounded-lg hover:bg-white/10 transition-colors duration-200 flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span class="font-medium">Аналитика</span>
+          </a>
+          <a href="/team" class="block py-3 px-4 rounded-lg hover:bg-white/10 transition-colors duration-200 flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-1m-6 6h6M8 20H3v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8z" />
+            </svg>
+            <span class="font-medium">Участники</span>
+          </a>
+        </nav>
       </div>
-      <div>
-        <h4 class="text-lg font-bold mb-2">🚧 In Progress</h4>
-        <div id="in-progress" class="space-y-4 bg-white p-4 rounded shadow min-h-[200px]"></div>
-      </div>
-      <div>
-        <h4 class="text-lg font-bold mb-2">✅ Done</h4>
-        <div id="done" class="space-y-4 bg-white p-4 rounded shadow min-h-[200px]"></div>
-      </div>
-    </div>
+    </aside>
 
-    <!-- Добавление задачи -->
-    <div class="bg-white p-6 rounded shadow mb-10">
-      <h3 class="text-xl font-semibold mb-4">➕ Добавить задачу</h3>
-      <input type="text" id="taskText" placeholder="Название задачи" class="border p-2 w-full mb-2 rounded" />
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <input type="email" id="taskAssignee" placeholder="Исполнитель (email)" class="border p-2 rounded" />
-        <select id="taskPriority" class="border p-2 rounded">
-          <option value="">Приоритет</option>
-          <option value="high">🔴 Высокий</option>
-          <option value="medium">🟡 Средний</option>
-          <option value="low">🟢 Низкий</option>
-        </select>
-        <input type="date" id="taskDue" class="border p-2 rounded" />
-      </div>
-      <button onclick="addTask()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Добавить</button>
-    </div>
-  </main>
 
-  <!-- Модальное окно редактирования -->
-  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-      <h2 class="text-xl font-bold mb-4">Редактировать задачу</h2>
-      <input type="text" id="editText" class="border p-2 w-full mb-2 rounded" />
-      <input type="email" id="editAssignee" class="border p-2 w-full mb-2 rounded" />
-      <select id="editPriority" class="border p-2 w-full mb-2 rounded">
+    <!-- Модальное окно редактирования -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-6 space-y-6">
+    <div class="flex justify-between items-center">
+      <h3 class="text-2xl font-bold text-gray-900">Редактировать задачу</h3>
+      <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+        ✖
+      </button>
+    </div>
+    <div class="space-y-4">
+      <input type="text" id="editText" placeholder="Название задачи" class="w-full border rounded px-4 py-2" />
+      <input type="email" id="editAssignee" list="assigneeList" placeholder="Исполнитель (email)" class="w-full border rounded px-4 py-2" />
+      <select id="editPriority" class="w-full border rounded px-4 py-2">
         <option value="">Приоритет</option>
         <option value="high">🔴 Высокий</option>
         <option value="medium">🟡 Средний</option>
         <option value="low">🟢 Низкий</option>
       </select>
-      <input type="date" id="editDue" class="border p-2 w-full mb-4 rounded" />
-      <div class="flex justify-between">
-        <button onclick="closeEditModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Отмена</button>
-        <button onclick="saveTaskEdit()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Сохранить</button>
-      </div>
+      <input type="date" id="editDue" class="w-full border rounded px-4 py-2" />
+      <button onclick="saveTaskEdit()" class="w-full bg-brand-600 text-white py-3 rounded-lg hover:bg-brand-700 transition">Сохранить</button>
     </div>
   </div>
-
-  <!-- Прогресс проекта -->
-<div id="progressBlock" class="bg-white p-6 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-2">📊 Прогресс проекта</h3>
-  <p id="progressText" class="text-sm text-gray-700 mb-2">Загрузка...</p>
-  <div class="w-full bg-gray-200 rounded-full h-4">
-    <div id="progressBar" class="bg-indigo-600 h-4 rounded-full" style="width: 0%"></div>
-  </div>
 </div>
-
 
 <!-- Модальное окно комментариев -->
-<div id="commentModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
-  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
-    <h2 class="text-xl font-bold mb-4">💬 Комментарии</h2>
-    <div id="commentList" class="space-y-3 max-h-64 overflow-y-auto mb-4 text-sm text-gray-700"></div>
-    <textarea id="newComment" placeholder="Напишите комментарий..." class="border p-2 w-full rounded mb-2"></textarea>
-    <div class="flex justify-between">
-      <button onclick="closeCommentModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Закрыть</button>
-      <button onclick="addComment()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Отправить</button>
+<div id="commentModal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-6 space-y-6">
+    <div class="flex justify-between items-center">
+      <h3 class="text-2xl font-bold text-gray-900">Комментарии</h3>
+      <button onclick="closeCommentModal()" class="text-gray-400 hover:text-gray-600">
+        ✖
+      </button>
     </div>
+    <div id="commentList" class="space-y-2 max-h-60 overflow-y-auto bg-gray-50 p-2 rounded border border-gray-200"></div>
+    <textarea id="newComment" rows="3" placeholder="Напишите комментарий..." class="w-full border rounded px-4 py-2"></textarea>
+    <button onclick="addComment()" class="w-full bg-brand-600 text-white py-3 rounded-lg hover:bg-brand-700 transition">Отправить</button>
   </div>
 </div>
+
+
+    <!-- Main Content with Subtle Background -->
+    <main class="flex-1 bg-gray-50 overflow-y-auto p-8 space-y-6">
+      <!-- Project Information Card with Enhanced Styling -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 transform transition hover:scale-[1.02]">
+        <h2 class="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight" id="projectTitle">Загрузка...</h2>
+        <p class="text-lg text-gray-600 mb-4" id="projectDesc">Описание проекта</p>
+        <div class="flex items-center text-sm text-gray-500 space-x-2" id="projectMembers">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brand-500" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.5 17.15c.51.21.94.56 1.25.97a6.492 6.492 0 01-1.625.23H7.874a6.492 6.492 0 01-1.625-.23c.31-.41.74-.76 1.25-.97a5.525 5.525 0 014 0zM14 5.5a2.5 2.5 0 10.001-4.999A2.5 2.5 0 0014 5.5zM1.5 14a2.5 2.5 0 10.001-4.999A2.5 2.5 0 001.5 14zM17 16c0 1.104-.448 2.105-1.172 2.828A3.963 3.963 0 0114 19a3.963 3.963 0 01-1.828-.172A3.487 3.487 0 0111 17a3.487 3.487 0 01.172-1.828A3.963 3.963 0 0114 14a3.963 3.963 0 011.828.172A3.987 3.987 0 0117 16z" />
+          </svg>
+          <span>Участники: ...</span>
+        </div>
+      </div>
+
+      <!-- Kanban Board with Improved Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="kanbanBoard">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-lg p-5 space-y-4">
+          <h4 class="text-xl font-bold mb-3 text-gray-800 flex items-center">
+            <span class="mr-2">📝</span>Todo
+          </h4>
+          <div id="todo" class="space-y-4 min-h-[200px]"></div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-lg p-5 space-y-4">
+          <h4 class="text-xl font-bold mb-3 text-gray-800 flex items-center">
+            <span class="mr-2">🚧</span>In Progress
+          </h4>
+          <div id="in-progress" class="space-y-4 min-h-[200px]"></div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-lg p-5 space-y-4">
+          <h4 class="text-xl font-bold mb-3 text-gray-800 flex items-center">
+            <span class="mr-2">✅</span>Done
+          </h4>
+          <div id="done" class="space-y-4 min-h-[200px]"></div>
+        </div>
+      </div>
+
+    
+     <!-- Кнопка создания задачи -->
+<div class="flex justify-end">
+  <button onclick="openTaskModal()" class="bg-brand-600 text-white px-6 py-3 rounded-lg hover:bg-brand-700 transition duration-300 flex items-center space-x-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+    </svg>
+    <span>Создать задачу</span>
+  </button>
+</div>
+
+      <!-- Модальное окно для создания задачи -->
+      <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto p-6 space-y-6 transform transition-all duration-300 scale-95 opacity-0" id="taskModalContent">
+          <div class="flex justify-between items-center">
+            <h3 class="text-2xl font-bold text-gray-900">Создание новой задачи</h3>
+            <button onclick="closeTaskModal()" class="text-gray-400 hover:text-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <input type="text" id="taskText" placeholder="Название задачи" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-500 transition" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="email" id="taskAssignee" list="assigneeList"
+                placeholder="Исполнитель (email)"
+                class="border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-500 transition" />
+              <datalist id="assigneeList"></datalist>
+
+
+              <select id="taskPriority" class="border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-500 transition">
+                <option value="">Приоритет</option>
+                <option value="high">🔴 Высокий</option>
+                <option value="medium">🟡 Средний</option>
+                <option value="low">🟢 Низкий</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Дата выполнения</label>
+                <input type="date" id="taskDue" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-500 transition" />
+              </div>
+            <button onclick="addTask()" class="w-full bg-brand-600 text-white py-3 rounded-lg hover:bg-brand-700 transition duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+              Создать задачу
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
 
   <!-- Firebase логика -->
@@ -123,27 +213,34 @@
   const descEl = document.getElementById("projectDesc");
   const membersEl = document.getElementById("projectMembers");
 
-  async function loadProject() {
-    const projectRef = doc(db, "projects", projectId);
-    const projectSnap = await getDoc(projectRef);
-    if (projectSnap.exists()) {
-      const data = projectSnap.data();
-      titleEl.textContent = data.name;
-      descEl.textContent = data.description || "Без описания";
-      membersEl.textContent = "👥 Участники: " + (data.members || []).join(", ");
-    } else {
-      titleEl.textContent = "Проект не найден";
-    }
-  }
+ let projectMembers = [];
 
-  function renderProgress() {
-    const total = allTasks.length;
-    const done = allTasks.filter(task => task.status === "done").length;
-    const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+async function loadProject() {
+  const projectRef = doc(db, "projects", projectId);
+  const projectSnap = await getDoc(projectRef);
+  if (projectSnap.exists()) {
+    const data = projectSnap.data();
+    titleEl.textContent = data.name;
+    descEl.textContent = data.description || "Без описания";
+    projectMembers = data.members || [];
+    membersEl.textContent = "👥 Участники: " + projectMembers.join(", ");
+    document.querySelector('a[href^="/analytics"]').href = `/analytics?id=${projectId}`;
 
-    document.getElementById("progressText").textContent = `✅ Выполнено ${done} из ${total} задач (${percent}%)`;
-    document.getElementById("progressBar").style.width = percent + "%";
+
+    // ⬇️ Заполняем datalist
+    const list = document.getElementById("assigneeList");
+    list.innerHTML = "";
+    projectMembers.forEach(email => {
+      const option = document.createElement("option");
+      option.value = email;
+      list.appendChild(option);
+    });
+  } else {
+    titleEl.textContent = "Проект не найден";
   }
+}
+
+  
 
   function renderKanban() {
     ["todo", "in-progress", "done"].forEach(id => {
@@ -165,36 +262,89 @@
       let dueClass = "text-gray-500";
 
       if (task.dueDate) {
-        const now = new Date();
-        const due = new Date(task.dueDate);
-        const diff = (due - now) / (1000 * 60 * 60 * 24);
-        dueLabel = due.toLocaleDateString("ru-RU");
+  const now = new Date();
+  const due = new Date(task.dueDate);
+  const diff = (due - now) / (1000 * 60 * 60 * 24);
 
-        if (diff < 0) dueClass = "text-red-600 font-semibold";
-        else if (diff <= 2) dueClass = "text-yellow-600 font-semibold";
-      }
+  dueLabel = due.toLocaleDateString("ru-RU");
+
+  if (diff < 0) {
+    dueClass = "text-red-600 font-bold animate-pulse";  // Просрочено с анимацией
+  } else if (diff <= 2) {
+    dueClass = "text-orange-500 font-semibold";  // Меньше 2 дней - оранжевый
+  } else if (diff <= 7) {
+    dueClass = "text-yellow-500";  // От 2 до 7 дней - желтый
+  } else {
+    dueClass = "text-green-500";  // Больше недели - зеленый
+  }
+}
 
       card.innerHTML = `
-        <p class="font-medium ${status}">${task.text}</p>
-        <p class="text-sm ${color}">${task.priority.toUpperCase()}</p>
-        <p class="text-sm text-gray-500">👤 ${task.assignee || "не назначено"}</p>
-        <p class="text-sm ${dueClass}">⏰ ${dueLabel}</p>
-        <div class="mt-2 flex gap-4 text-sm">
-          <button class="edit-btn text-blue-600 hover:underline">✏️ Редактировать</button>
-          <button class="comment-btn text-indigo-500 hover:underline">💬 Комментарии</button>
-          <button class="delete-btn text-red-600 hover:underline">🗑 Удалить</button>
-        </div>
-      `;
+  <p class="font-medium ${status}">${task.text}</p>
+  <p class="text-sm ${color}">${task.priority.toUpperCase()}</p>
+  <p class="text-sm text-gray-500">👤 ${task.assignee || "не назначено"}</p>
+  <p class="text-sm ${dueClass}">⏰ ${dueLabel}</p>
+  <div class="mt-2 flex gap-4 text-sm">
+    <button data-action="edit" data-task-id="${task.id}" class="text-blue-600 hover:underline">✏️ Редактировать</button>
+    <button data-action="comment" data-task-id="${task.id}" class="text-indigo-500 hover:underline">💬 Комментарии</button>
+    <button data-action="delete" data-task-id="${task.id}" class="text-red-600 hover:underline">🗑 Удалить</button>
+  </div>
+`;
 
-      card.querySelector(".edit-btn").addEventListener("click", () => openEditModal(task));
-      card.querySelector(".comment-btn").addEventListener("click", () => openCommentModal(task.id));
-      card.querySelector(".delete-btn").addEventListener("click", () => deleteTask(task.id));
 
+     
       document.getElementById(col).appendChild(card);
     });
 
     renderProgress();
   }
+document.getElementById("kanbanBoard").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+
+  const taskId = btn.getAttribute("data-task-id");
+  const action = btn.getAttribute("data-action");
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  switch (action) {
+    case "edit":
+      window.openEditModal(task);
+      break;
+    case "comment":
+      window.openCommentModal(task.id);
+      break;
+    case "delete":
+      window.deleteTask(task.id);
+      break;
+  }
+});
+
+
+
+ function openTaskModal() {
+  const modal = document.getElementById('taskModal');
+  const modalContent = document.getElementById('taskModalContent');
+  modal.classList.remove('hidden');
+
+  setTimeout(() => {
+    modalContent.classList.remove('scale-95', 'opacity-0');
+    modalContent.classList.add('scale-100', 'opacity-100'); // ← ДОБАВЬ ЭТУ СТРОКУ
+  }, 50);
+}
+
+
+  function closeTaskModal() {
+  const modal = document.getElementById('taskModal');
+  const modalContent = document.getElementById('taskModalContent');
+  modalContent.classList.remove('scale-100', 'opacity-100');
+  modalContent.classList.add('scale-95', 'opacity-0');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 300);
+}
+
+
 
   async function deleteTask(taskId) {
     const confirmDelete = confirm("Удалить задачу? Это действие нельзя отменить.");
@@ -347,6 +497,9 @@
   window.openCommentModal = openCommentModal;
   window.closeCommentModal = closeCommentModal;
   window.addComment = addComment;
+
+  window.openTaskModal = openTaskModal;
+  window.closeTaskModal = closeTaskModal;
 </script>
 
 

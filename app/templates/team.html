@@ -2,25 +2,60 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Участники</title>
+  <title>Участники — TeamTrack</title>
   <script type="module" src="/static/firebase.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/static/favicon.ico">
 </head>
-<body class="bg-gray-100 p-6">
-  <h1 class="text-2xl font-bold mb-4">👥 Участники</h1>
-  <input type="text" id="searchInput" placeholder="Поиск по email" class="mb-4 p-2 border border-gray-300 rounded w-full" />
-  <div id="teamList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <!-- Шапка -->
+  <header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-semibold text-indigo-600">TeamTrack</h1>
+      <nav>
+        <a id="backBtn" href="#" class="text-sm text-indigo-600 hover:underline">⬅ Назад к проекту</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Контент -->
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">👥 Участники проектов</h2>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Поиск по email"
+        class="border border-gray-300 rounded px-3 py-2 text-sm w-64"
+      />
+    </div>
+
+    <div id="teamList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+  </main>
 
   <script type="module">
     import { db } from "/static/firebase.js";
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const teamList = document.getElementById("teamList");
     const searchInput = document.getElementById("searchInput");
+    const backBtn = document.getElementById("backBtn");
+
+    // Устанавливаем ссылку на возврат к проекту
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get("id");
+    if (projectId) {
+      backBtn.href = `/project.html?id=${projectId}`;
+    } else {
+      backBtn.href = "/dashboard";
+    }
+
+    let userMap = {}; // Сохраняем локально для поиска
 
     async function loadTeam() {
       const projectsSnapshot = await getDocs(collection(db, "projects"));
-      const userMap = {};
+      userMap = {};
 
       projectsSnapshot.forEach((doc) => {
         const project = doc.data();
@@ -35,39 +70,45 @@
         });
       });
 
-      displayTeam(userMap);
+      renderUsers(userMap);
     }
 
-    function displayTeam(userMap) {
-      teamList.innerHTML = "";
+    function renderUsers(map) {
       const searchTerm = searchInput.value.toLowerCase();
+      teamList.innerHTML = "";
 
-      Object.entries(userMap).forEach(([email, projects]) => {
-        if (email.toLowerCase().includes(searchTerm)) {
-          const card = document.createElement("div");
-          card.className = "bg-white p-4 rounded shadow";
+      const filtered = Object.entries(map).filter(([email]) =>
+        email.toLowerCase().includes(searchTerm)
+      );
 
-          const emailElem = document.createElement("h2");
-          emailElem.className = "font-semibold text-lg";
-          emailElem.textContent = email;
+      if (filtered.length === 0) {
+        teamList.innerHTML = "<p class='text-gray-500'>Ничего не найдено.</p>";
+        return;
+      }
 
-          const projectsList = document.createElement("ul");
-          projects.forEach((project) => {
-            const li = document.createElement("li");
-            li.textContent = project;
-            projectsList.appendChild(li);
-          });
+      filtered.forEach(([email, projects]) => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-4 rounded shadow hover:shadow-md transition";
 
-          card.appendChild(emailElem);
-          card.appendChild(projectsList);
-          teamList.appendChild(card);
-        }
+        const emailEl = document.createElement("h3");
+        emailEl.className = "text-indigo-600 font-semibold mb-2 break-all";
+        emailEl.textContent = email;
+
+        const ul = document.createElement("ul");
+        ul.className = "list-disc list-inside text-sm text-gray-700";
+        projects.forEach(p => {
+          const li = document.createElement("li");
+          li.textContent = p;
+          ul.appendChild(li);
+        });
+
+        card.appendChild(emailEl);
+        card.appendChild(ul);
+        teamList.appendChild(card);
       });
     }
 
-    searchInput.addEventListener("input", () => {
-      loadTeam();
-    });
+    searchInput.addEventListener("input", () => renderUsers(userMap));
 
     loadTeam();
   </script>
