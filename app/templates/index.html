@@ -11,7 +11,10 @@
   <!-- Навигация -->
   <header class="bg-white shadow">
     <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
+      <div class="flex items-center space-x-3">
+        <img src="/static/logo.png" alt="TeamTrack логотип" class="h-8 w-auto"/>
+        <h1 class="text-2xl font-bold text-indigo-600">TeamTrack</h1>
+      </div>
       <nav class="space-x-4 flex items-center" id="nav-links">
         <a href="/login" class="text-gray-600 hover:text-indigo-600">Войти</a>
         <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Регистрация</a>
@@ -31,8 +34,8 @@
       </button>
     </div>
     
-    <div class="mt-10 md:mt-0 md:ml-10 w-full max-w-md">
-      <img src="https://undraw.co/api/illustrations/5deacfe9-1661-487c-bc3e-404c2754f98c" alt="Teamwork Illustration">
+    <div class="mt-10 md:mt-0 md:ml-10 w-full max-w-lg">
+      <img src="https://sdmntprwestus.oaiusercontent.com/files/00000000-595c-6230-8a11-618488808a4c/raw?se=2025-06-24T15%3A47%3A57Z&sp=r&sv=2024-08-04&sr=b&scid=00d8bc44-cb26-5e09-a8b4-386fce9d9cf2&skoid=61180a4f-34a9-42b7-b76d-9ca47d89946d&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-06-24T11%3A04%3A12Z&ske=2025-06-25T11%3A04%3A12Z&sks=b&skv=2024-08-04&sig=8mGfElFUZd9btjQWg1sy/iu7/gMRAkqDloSGaoJcpCc%3D" alt="Команда работает вместе с доской задач" class="rounded-lg shadow-lg"/>
     </div>
   </main>
 
@@ -45,6 +48,5 @@
 
   <!-- Firebase -->
   <script type="module" src="/static/firebase.js"></script>
-
 </body>
 </html>
